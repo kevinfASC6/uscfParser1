@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request
-import csv
 import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
