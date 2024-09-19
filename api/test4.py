@@ -54,32 +54,17 @@ def view_players(ids):
 
         # Extract required data from the HTML
         liverating0 = soup.find_all('td')
-        lix = liverating0[5].text.replace("\n", "")
+        lix = liverating0[5].text.replace("\n", "") 
+        print(lix)
         liverating = soup.findChildren('table')
         li1 = liverating[6]
         rows = li1.findChildren(['th', 'tr'])[:6] 
-        all_player_data.append([lix, f"Expiration Date: {date}", monthly_rating])  
-        #all_player_data.append([lix]) 
+        all_player_data.append([lix, f"Expiration Date: {date}", monthly_rating]) 
         for row in rows:
             cells = row.findChildren('td')
             row_data = [cell.text for cell in cells]
             all_player_data.append(row_data)
     all_player_data = tabulate(all_player_data, tablefmt="html") 
     return all_player_data 
-
-
-@app.route("/", methods=['GET', 'POST'])
-def home():
-    if request.method == 'POST':
-        player_ids = request.form.get('player_ids')
-        player_ids = [int(id.strip()) for id in player_ids.split(",")]
-        if player_ids:
-            posts = view_players(player_ids) 
-            return render_template("home.html", posts=posts)
-    return render_template("home.html", posts="")
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
+ 
+view_players([14973111])
