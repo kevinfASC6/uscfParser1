@@ -64,6 +64,12 @@ def view_players(ids):
             cells = row.findChildren('td')
             row_data = [cell.text for cell in cells]
             all_player_data.append(row_data)
+        all_player_data.append([''])
+        all_player_data.append([''])
+        all_player_data.append([''])
+        all_player_data.append([''])
+        all_player_data.append([''])
+    print(all_player_data)  # Print the table with all the player data
     all_player_data = tabulate(all_player_data, tablefmt="html") 
     return all_player_data 
 
