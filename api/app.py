@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Markup
 import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate 
@@ -64,25 +64,69 @@ def view_players(ids):
             cells = row.findChildren('td')
             row_data = [cell.text for cell in cells]
             all_player_data.append(row_data)
-        all_player_data.append([''])
-        all_player_data.append([''])
-        all_player_data.append([''])
-        all_player_data.append([''])
-        all_player_data.append([''])
-    print(all_player_data)  # Print the table with all the player data
     all_player_data = tabulate(all_player_data, tablefmt="html") 
     return all_player_data 
+
+def view_players_live(ids):
+    base_url = "https://www.uschess.org/msa/MbrDtlTnmtHst.php?"
+    all_player_data = []  # To store information for all players
+    players_html = "<table>"
+
+    for player_id in ids:
+        url = base_url + str(player_id)
+        html = requests.get(url)
+        soup = BeautifulSoup(html.text, "html.parser")
+
+        # Extract required data from the HTML
+        liverating0 = soup.find_all('td')
+        lix = liverating0[5].text.replace("\n", "")
+        liverating = soup.findChildren('table')
+        li1 = liverating[6]
+        rows = li1.findChildren(['th', 'tr'])[:6] 
+        players_html += f"<tr><td>{lix}</td></tr>"  # Add player rating to table
+
+        # Iterate through rows and append cell data to the table
+        for row in rows:
+            cells = row.findChildren('td')
+            row_data = [cell.text.strip() for cell in cells]  # Clean up text
+            all_player_data.append(row_data)
+            # Add each cell text into the table row
+            players_html += "<tr>" + "".join([f"<td>{cell}</td>" for cell in row_data]) + "</tr>"
+
+        players_html += "</table><table>"  # End of current table, start a new one
+
+    players_html += "</table>"  # End the last table
+    return players_html
+
 
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
+    html = "Working on the website design... <br><br> <h2>Current tools:</h2><br>"
+    html += "-<a href ='/uscfratingscurrent'>USCF Live Pairings Search</a> (This includes monthly rating and expiration date, so will take longer to search)<br>"
+    html += "-<a href ='/uscfratingslive'>USCF Live Pairings Search</a> (Faster Search)"
+    html += "<br>-<a href ='/notations'>Notation sheet converter</a> (In progess...)"
+    return Markup(html)
+
+@app.route("/uscfratingslive", methods=['GET', 'POST'])
+def uscfratingslive():
+    if request.method == 'POST':
+        player_ids = request.form.get('player_ids')
+        player_ids = [int(id.strip()) for id in player_ids.split(",")]
+        if player_ids:
+            posts = view_players_live(player_ids) 
+            return render_template("uscfratings.html", posts=posts)
+    return render_template("uscfratings.html", posts="")
+
+@app.route("/uscfratingscurrent", methods=['GET', 'POST'])
+def uscfratingscurrent():
     if request.method == 'POST':
         player_ids = request.form.get('player_ids')
         player_ids = [int(id.strip()) for id in player_ids.split(",")]
         if player_ids:
             posts = view_players(player_ids) 
-            return render_template("home.html", posts=posts)
-    return render_template("home.html", posts="")
+            return render_template("uscfratings.html", posts=posts)
+    return render_template("uscfratings.html", posts="")
 
 
 if __name__ == "__main__":
